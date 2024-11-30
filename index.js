@@ -26,6 +26,9 @@ async function run() {
 
         const database = client.db("espressoDB")
         const coffeeCollection = database.collection("coffees");
+
+        const userCollection = client.db("espressoDB").collection("user");
+
         // operations
         // get all coffees
         app.get('/addCoffee', async (req, res) => {
@@ -36,7 +39,7 @@ async function run() {
         // to show a single coffee also use for update
         app.get('/addCoffee/:id', async (req, res) => {
             const id = req.params.id;
-            const query = {_id: new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const coffee = await coffeeCollection.findOne(query);
             res.send(coffee);
         });
@@ -50,14 +53,14 @@ async function run() {
         });
 
         // update a coffee
-        app.put('/addCoffee/:id', async(req, res)=>{
+        app.put('/addCoffee/:id', async (req, res) => {
             const id = req.params.id;
             const coffee = req.body;
             console.log(coffee);
-            const filter = {_id: new ObjectId(id)};
-            const options = {upsert: true};
-            const updateCoffee ={
-                $set:{
+            const filter = { _id: new ObjectId(id) };
+            const options = { upsert: true };
+            const updateCoffee = {
+                $set: {
                     name: coffee.name,
                     chef: coffee.chef,
                     supplier: coffee.supplier,
@@ -74,12 +77,53 @@ async function run() {
         })
 
         // Delete a single coffee
-        app.delete('/addCoffee/:id', async(req, res)=>{
+        app.delete('/addCoffee/:id', async (req, res) => {
             const id = req.params.id;
-            const coffeeDel = {_id: new ObjectId(id)};
+            const coffeeDel = { _id: new ObjectId(id) };
             const result = await coffeeCollection.deleteOne(coffeeDel);
             res.send(result)
         });
+
+        // create new user in database 
+
+        // read or get user in ui 
+        app.get('/user', async (req, res) => {
+            const allUser = userCollection.find();
+            const result = await allUser.toArray();
+            res.send(result);
+        });
+
+
+        // insert user in database
+        app.post('/user', async (req, res) => {
+            const user = req.body;
+            console.log(user);
+            const result = await userCollection.insertOne(user);
+            res.send(result)
+        });
+
+        // app.patch('/user/:email', async (req, res) => {
+            // const email = req.params.email;
+
+        app.patch('/user', async (req, res) => {
+            const email = req.body.email;
+            const filter = { email };
+            const updatedUserLogTime = {
+                $set:{
+                    lastSignInTime: req.body?.lastSignInTime
+                }
+            };
+            const result =await userCollection.updateOne(filter, updatedUserLogTime);
+            res.send(result);
+        })
+
+        // delete user
+        app.delete('/user/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: new ObjectId(id) };
+            const result = await userCollection.deleteOne(query);
+            res.send(result);
+        })
 
         // operations end
 
